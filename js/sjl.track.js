@@ -6,7 +6,6 @@
  */
 
 var trafi = 'http://rata.digitraffic.fi/api/v1/';
-var meh = 'http://junat.eu/';
 var vr_georss = 'http://188.117.35.14/TrainRSS/TrainService.svc/AllTrains'
 
 // Clean this global shit up.
@@ -115,12 +114,8 @@ function getMetas(ss, callBack) {
 }
 
 function getStationClasses(ls, ps) {
-  $.getJSON(meh + '/henkiloliikenteen-asemat.json',
-            function(json) {
-              plotPStations(ps, json, stationIcons['person']); });
-  $.getJSON(meh + '/lahiliikenteen-asemat.json',
-            function(json) {
-               plotCStations(ls, json, stationIcons['commuter']); });
+  plotPStations(ps, PStations, stationIcons['person']); });
+  plotCStations(ls, CStations, stationIcons['commuter']); });
 }
 
 function getTrains() {
@@ -223,6 +218,29 @@ function plotAllStations(group, json) {
   group.addLayer(L.layerGroup(ms));
 }
 
+var PStations = [ "AIN", "ALV", "DRA", "ENO", "EPO", "EPZ",
+  "HAA", "HAU", "HK", "HKH", "HKI", "HKP", "HKS", "HL", "HNK",
+  "HNV", "HP", "HPJ", "HPK", "HPL", "HR", "HVA", "HÖL", "IKO",
+  "IKR", "IKY", "ILA", "ILM", "IMR", "ITA", "JJ", "JK", "JNS",
+  "JP", "JR", "JRS", "JTS", "JY", "JÄS", "KA", "KAJ", "KAN",
+  "KE", "KEA", "KEM", "KEU", "KHA", "KIL", "KIT", "KIÄ", "KJÄ",
+  "KKI", "KKN", "KLH", "KLI", "KLN", "KLO", "KNI", "KNS", "KOH",
+  "KOK", "KON", "KON", "KR", "KRA", "KRS", "KRU", "KRV", "KTA",
+  "KTI", "KTS", "KUO", "KUT", "KV", "KVH", "KVY", "KY", "KYN",
+  "KÄP", "LAA", "LAI", "LH", "LIS", "LM", "LMA", "LNA", "LOH",
+  "LPA", "LPO", "LPV", "LPÄ", "LR", "LUS", "LVT", "MAS", "MH",
+  "MI", "MIS", "MKI", "ML", "MLA", "MLO", "MLÄ", "MNK", "MR",
+  "MRL", "MUL", "MY", "MYR", "MÄK", "NOA", "NRM", "NSL", "NUP",
+  "NVL", "OI", "OL", "OLK", "OU", "OVK", "PAR", "PEL", "PH",
+  "PHÄ", "PJM", "PKO", "PKY", "PLA", "PM", "PMK", "PNÄ", "POH",
+  "PRI", "PRL", "PSL", "PTI", "PTO", "PUN", "PUR", "PVI", "REE",
+  "RI", "RKI", "RKL", "RNN", "ROI", "RY", "SAU", "SAV", "SGY",
+  "SIJ", "SK", "SKV", "SL", "SLO", "SNJ", "SPL", "STI", "TK",
+  "TKL", "TKU", "TL", "TMS", "TNA", "TOL", "TPE", "TRI", "TRL",
+  "TRV", "TSL", "TU", "TUS", "TUU", "UIM", "UTJ", "VAA", "VAR",
+  "VIA", "VIH", "VKS", "VLP", "VMA", "VMO", "VNA", "VNJ", "VS",
+  "VSL", "VTI", "YST", "YTR", "YV", "ÄHT" ];
+
 function plotPStations(group, arr, icon) {
   var ms = [];
 
@@ -247,6 +265,43 @@ function plotPStations(group, arr, icon) {
   group.clearLayers();
   group.addLayer(L.layerGroup(ms));
 }
+
+var CStations =
+{
+  "aTrainStations": [ "HKI", "HPL", "ILA", "KHK", "MÄK", "PJM", "PSL", "VMO" ],
+  "eTrainStations": [ "EPO", "HPL", "KEA", "KIL", "KLH", "KNI", "KVH", "LPV",
+                      "PSL", "TRL" ],
+  "hTrainStations": [],
+  "iTrainStations": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA",
+    "KAN", "KHK", "KTÖ", "KÄP", "LAV", "LEN", "LNÄ", "LOH", "ML", "MLO",
+    "MRL", "MYR", "OLK", "PLA", "PMK", "POH", "PSL", "RSM", "TKL", "TNA",
+    "VEH", "VKS", "VMS" ],
+  "kTrainStations": [ "HKH", "HNA", "HVK", "KE", "KRS", "KVY", "ML", "OLK",
+    "PLA", "PSL", "RKL", "SAV", "TKL" ],
+  "lTrainStations": [ "EPO", "HEK", "HKI", "HPL", "JRS", "KEA", "KHK", "KIL",
+    "KLH", "KNI", "KVH", "LMA", "LPV", "MAS", "MNK", "PSL", "TOL", "TRL",
+    "VKH" ],
+  "nTrainStations": [ "HKH", "HNA", "HVK", "KE", "KRS", "KVY", "KÄP", "ML",
+    "OLK", "PLA", "PMK", "PSL", "RKL", "SAV", "TKL", "TNA" ],
+  "pTrainStations": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA",
+    "KAN", "KHK", "KTÖ", "KÄP", "LAV", "LEN", "LNÄ", "LOH", "ML", "MLO",
+    "MRL", "MYR", "OLK", "PLA", "PMK", "POH", "PSL", "RSM", "TKL",
+    "TNA", "VEH", "VKS", "VMS" ],
+  "rTrainStations": [ "AIN", "ARP", "HKH", "HKI", "HNA", "HVK", "HY", "JK",
+    "JP", "KE", "KRS", "KVY", "KYT", "KÄP", "ML", "NUP", "OLK", "PLA", "PLP",
+    "PMK", "PSL", "PUR", "RKL", "SAU", "SAV", "TKL", "TNA" ],
+  "sTrainStations": [ "EPO", "HEK", "HPL", "ILA", "JRS", "KEA", "KHK",
+    "KIL", "KKN", "KLH", "KNI", "KVH", "LMA", "LPV", "MAS", "MNK", "MÄK",
+    "PJM", "PSL", "TOL", "TRL", "VKH", "VMO" ],
+  "tTrainStations": [],
+  "uTrainStations": [ "EPO", "HEK", "HKI", "HPL", "ILA", "JRS", "KEA",
+    "KHK", "KIL", "KLH", "KNI", "KVH", "LMA", "LPV", "MAS", "MNK", "MÄK",
+    "PJM", "PSL", "TOL", "TRL", "VKH", "VMO" ],
+"yTrainStations": [ "KR", "IKO", "STI", "KKN", "MAS", "LPV", "HKI" ],
+"zTrainStations": [ "HAA", "HKH", "HLT", "HNA", "HVK", "KE", "KRS",
+  "KSU", "KVY", "KYT", "KÄP", "LH", "LÄH", "ML", "MLÄ", "OLK", "PLA",
+  "PMK", "PSL", "RKL", "SAV", "SIP", "TKL", "TNA" ]
+}; 
 
 function plotCStations(group, obj, icon) {
   var ms = [];
