@@ -136,6 +136,44 @@ function getVR(l, c) {
                  updateVR(l, c, data.results[0]); });
 }
 
+function trainInfo(id, pathLayer) {
+  var group = new L.LayerGroup();
+  var i;
+  var label;
+  var line;
+  var path = [];
+  var pathUICs = [];
+  var station;
+  var train = getTrainByNumber(id);
+
+  if (typeof(train) == 'undefined') return;
+
+  train.timeTableRows.unique().forEach(function(c, i, a) {
+                                         pathUICs.push(c.stationUICCode); });
+  pathUICs.forEach(function(c, i, a) {
+                     station =  getStationByUIC(c);
+                     path.push([ station.latitude, station.longitude ]);
+                   });
+
+  line = L.polyline(path, { color: '#FF8080', smoothFactor: 3.0 });
+  line.bindLabel(label, { clickable: false, noHide: true });
+
+  label = new L.Label();
+  label.setLatLng(line.getBounds().getCenter());
+  label.setContent(getStationByUIC(pathUICs[0]).stationName + ' - ' +
+                   getStationByUIC(pathUICs[pathUICs.length - 1]).stationName);
+
+  
+  group.addLayer(line);
+  group.addLayer(label);
+  map.addLayer(group);
+
+  map.once('click', function() { map.removeLayer(group); });
+  setTimeout(function() { map.removeLayer(group); }, 1000 * 15);
+  console.log('map.getPixelBounds(): ' + map.getPixelBounds());
+  console.log('map.getSize(): ' + map.getSize());
+}
+
 function updateVR(l, c, rss) {
   var coll = $.parseXML(rss.replace(/title/g, 'nom')).
                getElementsByTagName('item');
@@ -154,19 +192,21 @@ function updateVR(l, c, rss) {
     var train = getTrainByNumber(num);
     var info;
     var label;
-    var dst = getStationByUIC(train.timeTableRows[train.timeTableRows.length - 1].stationUICCode).stationName;
-    var src = getStationByUIC(train.timeTableRows[0].stationUICCode).stationName;
+    var dst = getStationByUIC(train.timeTableRows[train.timeTableRows.length - 1].stationUICCode).stationName.replace(/ asema/, '');
+    var src = getStationByUIC(train.timeTableRows[0].stationUICCode).stationName.replace(/ asema/, '');
 
     if (train.trainCategory == 'Commuter') {
-      label = train.commuterLineID + ' (H' + train.trainNumber + ')';
+      label = train.commuterLineID;
       /* Commuter trains outside Helsinki region. */
       icon = trainIcons['commuter'];
     } else {
-      label = train.trainType + num;
+      if (train.trainType.charAt(0) == 'H')
+        label = 'H' + num;
+      else
+        label = train.trainType + num;
       icon = trainIcons['longdistance'];
     }
-    info = label + ' ' +
-           src + '-' + dst + ' ' +
+    info = num + ' ' + src + '-' + dst + ' ' +
            lat.toFixed(2) + '°N ' + lng.toFixed(2) + '°E'; 
 
     var mark = L.marker( [ lat, lng ],
@@ -181,6 +221,7 @@ function updateVR(l, c, rss) {
                  bindLabel(label, { clickable: false,
                                     noHide: true,
                                     offset: [ 12, -22 ] });
+    mark.addEventListener('click', trainInfo.bind(this, num), false);
     mark.setIconAngle(dir);
 
     if (train.trainCategory == 'Commuter')
@@ -266,12 +307,16 @@ function plotPStations(group, arr, icon) {
   group.addLayer(L.layerGroup(ms));
 }
 
+// l = getTrainByNumber(8747).timeTableRows; r = []; for(var i = l.length - 1; i > 0; i--) { r.push(l[i].stationShortCode); } copy(Array.sort(r));
 var CStations =
 {
   "aTrainStations": [ "HKI", "HPL", "ILA", "KHK", "MÄK", "PJM", "PSL", "VMO" ],
   "eTrainStations": [ "EPO", "HPL", "KEA", "KIL", "KLH", "KNI", "KVH", "LPV",
-                      "PSL", "TRL" ],
-  "hTrainStations": [],
+    "PSL", "TRL" ],
+  "hTrainStations": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA", "KAN",
+    "KHK", "KTÖ", "KÄP", "LAV", "LEN", "LNÄ", "LOH", "ML", "MLO", "MRL",
+    "MYR", "OLK", "PLA", "PMK", "POH", "PSL", "RSM", "TKL", "TNA", "VEH",
+    "VKS", "VMS" ],
   "iTrainStations": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA",
     "KAN", "KHK", "KTÖ", "KÄP", "LAV", "LEN", "LNÄ", "LOH", "ML", "MLO",
     "MRL", "MYR", "OLK", "PLA", "PMK", "POH", "PSL", "RSM", "TKL", "TNA",
@@ -297,17 +342,16 @@ var CStations =
   "uTrainStations": [ "EPO", "HEK", "HKI", "HPL", "ILA", "JRS", "KEA",
     "KHK", "KIL", "KLH", "KNI", "KVH", "LMA", "LPV", "MAS", "MNK", "MÄK",
     "PJM", "PSL", "TOL", "TRL", "VKH", "VMO" ],
-"yTrainStations": [ "KR", "IKO", "STI", "KKN", "MAS", "LPV", "HKI" ],
-"zTrainStations": [ "HAA", "HKH", "HLT", "HNA", "HVK", "KE", "KRS",
-  "KSU", "KVY", "KYT", "KÄP", "LH", "LÄH", "ML", "MLÄ", "OLK", "PLA",
-  "PMK", "PSL", "RKL", "SAV", "SIP", "TKL", "TNA" ]
+  "yTrainStations": [ "KR", "IKO", "STI", "KKN", "MAS", "LPV", "HKI" ],
+  "zTrainStations": [ "HAA", "HKH", "HLT", "HNA", "HVK", "KE", "KRS",
+    "KSU", "KVY", "KYT", "KÄP", "LH", "LÄH", "ML", "MLÄ", "OLK", "PLA",
+    "PMK", "PSL", "RKL", "SAV", "SIP", "TKL", "TNA" ]
 }; 
 
 function plotCStations(group, obj, icon) {
   var ms = [];
   var ss = [];
 
-  lahi = obj;
   jQuery.each(obj,
               function(n, o) {
                 ss = ss.concat(o.filter(function(e) {
@@ -341,9 +385,8 @@ $().ready(function() {
   var osmBW = new L.TileLayer(
     'http://a.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
     { attribution:
-        '<a href="https://github.com/samilaine/junat.eu">Junat Kartalla</a>' +
-        ' &copy; <a href="http://github.com/samilaine">' +
-        'Sami Laine</a> | ' +
+        '<a href="https://github.com/samilaine/junat.eu">Sorsat</a>' +
+        ' | ' +
         'Map data © <a href="http://openstreetmap.org">' +
         'OpenStreetMap</a> contributors' } );   
 
@@ -352,13 +395,13 @@ $().ready(function() {
   var ss = new L.layerGroup();
   var lts = new L.layerGroup();
   var cts = new L.layerGroup();
+  var paths = new L.layerGroup();
 
   map = L.map('sjl-trains-map', { center: [ 60.860, 24.994 ],
-                       layers: [ osmBW, ps, lts, cts ],
+                       layers: [ osmBW, ps, lts, cts, paths ],
                         zoom: 7 });
 
-  L.control.layers({
-                   },
+  L.control.layers({ },
                    { 
                      'Henkilöliikenteen asemat': ps,
                      'Kaikki liikennepaikat': ss,
@@ -377,7 +420,7 @@ $().ready(function() {
                             getMetas(ls, ps, ss, function() {});
                           }, 1000 * 60 * 15));
   timers.push(setInterval(function() { getTrains(); }, 1000 * 120));
-  timers.push(setInterval(function() { getVR(lts, cts); }, 1000 * 5));
+  timers.push(setInterval(function() { getVR(lts, cts, paths); }, 1000 * 5));
 });
 
 // end of file.

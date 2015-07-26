@@ -49,3 +49,22 @@
   background: #7bbfe4;
   border: 2px solid #218acb;
 }
+
+.sjl-trains-overlay {
+    position: fixed;
+    padding: 10px;
+    top: 500;
+    left: 50;
+    width: 75px;
+    height: 50px;
+    background-color: #aaaaaa;
+    border: 1px solid #000000;
+    filter:alpha(opacity=30);
+    -moz-opacity:0.3;
+    -khtml-opacity: 0.3;
+    opacity: 0.3;
+    z-index: 10000;
+}
+
+.sjl-trains-overlay.info {
+}
