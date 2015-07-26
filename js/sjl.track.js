@@ -6,7 +6,7 @@
  */
 
 var trafi = 'http://rata.digitraffic.fi/api/v1/';
-var meh = 'http://localhost/junat.eu/';
+var meh = 'http://junat.eu/';
 var vr_georss = 'http://188.117.35.14/TrainRSS/TrainService.svc/AllTrains'
 
 // Clean this global shit up.
