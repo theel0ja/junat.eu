@@ -1,0 +1,51 @@
+#sjl-trains-map {
+  bottom: 0px;
+  left: 0px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+}
+
+.sjl-trains-station {
+  border-radius: 3px 3px 3px 3px;
+  display: block;
+  height: 25px;
+  width: 25px;
+}
+
+.sjl-trains-station.generic {
+  background: #E6E6FF;
+  border: 2px solid #8080FF;
+}
+
+.sjl-trains-station.commuter {
+  background: #7bbfe4;
+  border: 2px solid #218acb;
+}
+
+.sjl-trains-station.person {
+  background: #d4ebce;
+  border: 2px solid #65b748;
+}
+
+.sjl-trains-train {
+  display: block;
+  width: 10px;
+  height: 30px;
+  border-radius: 10px 10px 3px 3px;
+}
+
+.sjl-trains-train.non-national {
+  background: #FF9999;
+  border: 2px solid #FF4D4D;
+}
+
+.sjl-trains-train.long-distance {
+  background: #d4ebce;
+  border: 2px solid #65b748;
+}
+
+.sjl-trains-train.commuter {
+  background: #7bbfe4;
+  border: 2px solid #218acb;
+}
