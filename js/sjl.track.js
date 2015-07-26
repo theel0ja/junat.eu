@@ -114,8 +114,8 @@ function getMetas(ss, callBack) {
 }
 
 function getStationClasses(ls, ps) {
-  plotPStations(ps, PStations, stationIcons['person']); });
-  plotCStations(ls, CStations, stationIcons['commuter']); });
+  plotPStations(ps, PStations, stationIcons['person']);
+  plotCStations(ls, CStations, stationIcons['commuter']);
 }
 
 function getTrains() {
