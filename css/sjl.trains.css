@@ -18,6 +18,11 @@
   border: 2px solid #009933;
 }
 
+.station-info {
+  background: white;
+  border: 2px solid grey;
+}
+
 .sjl-trains-station {
   border-radius: 3px 3px 3px 3px;
   display: block;
@@ -65,10 +70,10 @@
 
   font: 11px "Helvetica Neue", Arial, Helvetica, sans-serif;
 
-  filter: alpha(opacity=95);
-  -moz-opacity: 0.95;
-  -khtml-opacity: 0.95;
-  opacity: 0.95;
+  filter: alpha(opacity=85);
+  -moz-opacity: 0.85;
+  -khtml-opacity: 0.85;
+  opacity: 0.85;
 
   width: 280px;
 }
@@ -138,6 +143,15 @@
 
   position: absolute !important;
   bottom: 5px !important;
+  left: 5px !important;
+  z-index: 99999;
+}
+
+.sjl-station-info-popup {
+  width: 200px;
+
+  position: absolute !important;
+  top: 5px !important;
   left: 5px !important;
   z-index: 99999;
 }

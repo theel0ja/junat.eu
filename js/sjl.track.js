@@ -8,10 +8,22 @@
 var trafi = 'http://rata.digitraffic.fi/api/v1/';
 var vr_georss = 'http://188.117.35.14/TrainRSS/TrainService.svc/AllTrains'
 
+/* 
+ * Map layers.
+ * 0 = all stations
+ * 1 = commercial person traffic stations
+ * 2 = commuter stations
+ * 3 = train info display and train path
+ * 4 = station info display
+ * 5 = long distance trains
+ * 6 = commuter trains
+ */
+var layers = Array(7);
+var stationInfoTimer;
+
 // Clean this global shit up.
 var tracked;
 var map;
-var stationLayers = [ L.layerGroup(), L.layerGroup(), L.layerGroup() ];
 var compositions;
 var operators;
 var stations;
@@ -119,7 +131,7 @@ function getTrains() {
   $.getJSON(trafi + '/live-trains', function(json) { trains = json; });
 }
 
-function getVR(l, c) {
+function getVR() {
   /* 
    * Use Yahoo API to get past cross-domain query restrictions.
    * Usable for some tiny, small crap like VR live RSS.
@@ -130,7 +142,7 @@ function getVR(l, c) {
              "%22&format=xml'&callback=?",
              function(data) {
                if ( data.results[0] )
-                 updateVR(l, c, data.results[0]); });
+                 updateVR(data.results[0]); });
 }
 
 function trainInfo(id, lat, lng) {
@@ -156,7 +168,8 @@ function trainInfo(id, lat, lng) {
 
   line = L.polyline(path, { clickable: false,
                             color: '#FF8080',
-                            smoothFactor: 2.0 });
+                            smoothFactor: 2.0,
+                            opacity: 0.3 });
 
   if (train.trainCategory == 'Commuter')
     type = train.commuterLineID;
@@ -175,14 +188,11 @@ function trainInfo(id, lat, lng) {
   else
     departure = tmp.actualTime;
 
-  group.addLayer(line);
-  map.addLayer(group);
-
-  map.once('click', function() { map.removeLayer(group); });
-  setTimeout(function() { map.removeLayer(group); }, 1000 * 15);
+  layers[3].clearLayers();
+  layers[3].addLayer(line);
 }
 
-function updateVR(l, c, rss) {
+function updateVR(rss) {
   var coll = $.parseXML(rss.replace(/title/g, 'nom')).
                getElementsByTagName('item');
   var cs = [];
@@ -229,14 +239,13 @@ function updateVR(l, c, rss) {
                  bindLabel(label, { clickable: false,
                                     noHide: true,
                                     offset: [ 12, -22 ] });
-    mark.addEventListener('click', trainInfo.bind(this, num, lat, lng), false);
     mark.setIconAngle(dir);
 
     if (train.trainCategory == 'Commuter') {
-      mark.on('click', infoShow.bind(this, 'hsl', lat, lng, num))
+      mark.on('click', infoTrain.bind(this, 'hsl', lat, lng, num))
       cs.push(mark);
     } else {
-      mark.on('click', infoShow.bind(this, 'vr', lat, lng, num))
+      mark.on('click', infoTrain.bind(this, 'vr', lat, lng, num))
       ls.push(mark);
     }
 
@@ -244,38 +253,42 @@ function updateVR(l, c, rss) {
   }
 
   if (trk == 0) 
-    infoHide();
+    infoTrainHide();
   else
     infoUpdate(lat, lng, tracked);
 
-  c.clearLayers();
-  c.addLayer(L.layerGroup(cs));
-  l.clearLayers();
-  l.addLayer(L.layerGroup(ls));
+  layers[5].clearLayers();
+  layers[5].addLayer(L.layerGroup(ls));
+  layers[6].clearLayers();
+  layers[6].addLayer(L.layerGroup(cs));
 }
 
 function plotAllStations(json) {
   var ms = [];
 
   for(var i = 0; i < stations.length; i++) {
-    var info = stations[i].stationName +
-               ' (' + stations[i].stationShortCode +') ' +
-               stations[i].latitude.toFixed(2) + '°N' + ', ' +
-               stations[i].longitude.toFixed(2) + '°E';
-    ms.push( L.marker( [ stations[i].latitude, stations[i].longitude ],
+    var s = stations[i];
+    var info = s.stationName +
+               ' (' + s.stationShortCode +') ' +
+               s.latitude.toFixed(2) + '°N' + ', ' +
+               s.longitude.toFixed(2) + '°E';
+    var mark = L.marker( [ s.latitude, s.longitude ],
       {
         draggable: false,
         clickable: true,
-        html: stations[i].stationName,
+        html: s.stationName,
         icon: stationIcons['generic'][0],
         opacity: 0.8,
         raiseOnHover: false,
         title: info,
         zIndexOffset: stationIcons['generic'][1],
-      }));
+      });
+    mark.on('click', (function(uic) {
+          infoStation(uic); }).bind(this,s.stationUICCode));
+    ms.push(mark);
   }
-  stationLayers[0].clearLayers();
-  stationLayers[0].addLayer(L.layerGroup(ms));
+  layers[0].clearLayers();
+  layers[0].addLayer(L.layerGroup(ms));
 }
 
 var PStations = [ "AIN", "ALV", "DRA", "ENO", "EPO", "EPZ",
@@ -310,7 +323,7 @@ function plotPStations(arr, icon) {
                ' (' + s.stationShortCode +') ' +
                s.latitude.toFixed(2) + '°N' + ', ' +
                s.longitude.toFixed(2) + '°E';
-    ms.push( L.marker( [ s.latitude, s.longitude ],
+    var mark = L.marker( [ s.latitude, s.longitude ],
       {
         draggable: false,
         clickable: true,
@@ -318,51 +331,52 @@ function plotPStations(arr, icon) {
         icon: icon[0],
         opacity: 0.8,
         raiseOnHover: false,
-        title: info,
         zIndexOffset: icon[1]
-      }));
+      });
+    mark.on('click', (function(uic) {
+          infoStation(uic); }).bind(this,s.stationUICCode));
+    ms.push(mark);
   }
-  stationLayers[1].clearLayers();
-  stationLayers[1].addLayer(L.layerGroup(ms));
+  layers[1].clearLayers();
+  layers[1].addLayer(L.layerGroup(ms));
 }
 
-// l = getTrainByNumber(8747).timeTableRows; r = []; for(var i = l.length - 1; i > 0; i--) { r.push(l[i].stationShortCode); } copy(Array.sort(r));
 var CStations =
 {
-  "aTrainStations": [ "HKI", "HPL", "ILA", "KHK", "MÄK", "PJM", "PSL", "VMO" ],
-  "eTrainStations": [ "EPO", "HPL", "KEA", "KIL", "KLH", "KNI", "KVH", "LPV",
+  "A": [ "HKI", "HPL", "ILA", "KHK", "MÄK", "PJM", "PSL", "VMO" ],
+  "E": [ "EPO", "HPL", "KEA", "KIL", "KLH", "KNI", "KVH", "LPV",
     "PSL", "TRL" ],
-  "hTrainStations": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA", "KAN",
+  "H": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA", "KAN",
     "KHK", "KTÖ", "KÄP", "LAV", "LEN", "LNÄ", "LOH", "ML", "MLO", "MRL",
     "MYR", "OLK", "PLA", "PMK", "POH", "PSL", "RSM", "TKL", "TNA", "VEH",
     "VKS", "VMS" ],
-  "iTrainStations": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA",
+  "I": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA",
     "KAN", "KHK", "KTÖ", "KÄP", "LAV", "LEN", "LNÄ", "LOH", "ML", "MLO",
     "MRL", "MYR", "OLK", "PLA", "PMK", "POH", "PSL", "RSM", "TKL", "TNA",
     "VEH", "VKS", "VMS" ],
-  "kTrainStations": [ "HKH", "HNA", "HVK", "KE", "KRS", "KVY", "ML", "OLK",
+  "K": [ "HKH", "HNA", "HVK", "KE", "KRS", "KVY", "ML", "OLK",
     "PLA", "PSL", "RKL", "SAV", "TKL" ],
-  "lTrainStations": [ "EPO", "HEK", "HKI", "HPL", "JRS", "KEA", "KHK", "KIL",
+  "L": [ "EPO", "HEK", "HKI", "HPL", "JRS", "KEA", "KHK", "KIL",
     "KLH", "KNI", "KVH", "LMA", "LPV", "MAS", "MNK", "PSL", "TOL", "TRL",
     "VKH" ],
-  "nTrainStations": [ "HKH", "HNA", "HVK", "KE", "KRS", "KVY", "KÄP", "ML",
+  "N": [ "HKH", "HNA", "HVK", "KE", "KRS", "KVY", "KÄP", "ML",
     "OLK", "PLA", "PMK", "PSL", "RKL", "SAV", "TKL", "TNA" ],
-  "pTrainStations": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA",
+  "P": [ "ASO", "AVP", "HKH", "HKI", "HPL", "HVK", "ILA",
     "KAN", "KHK", "KTÖ", "KÄP", "LAV", "LEN", "LNÄ", "LOH", "ML", "MLO",
     "MRL", "MYR", "OLK", "PLA", "PMK", "POH", "PSL", "RSM", "TKL",
     "TNA", "VEH", "VKS", "VMS" ],
-  "rTrainStations": [ "AIN", "ARP", "HKH", "HKI", "HNA", "HVK", "HY", "JK",
+  "R": [ "AIN", "ARP", "HKH", "HKI", "HNA", "HVK", "HY", "JK",
     "JP", "KE", "KRS", "KVY", "KYT", "KÄP", "ML", "NUP", "OLK", "PLA", "PLP",
     "PMK", "PSL", "PUR", "RKL", "SAU", "SAV", "TKL", "TNA" ],
-  "sTrainStations": [ "EPO", "HEK", "HPL", "ILA", "JRS", "KEA", "KHK",
+  "S": [ "EPO", "HEK", "HPL", "ILA", "JRS", "KEA", "KHK",
     "KIL", "KKN", "KLH", "KNI", "KVH", "LMA", "LPV", "MAS", "MNK", "MÄK",
     "PJM", "PSL", "TOL", "TRL", "VKH", "VMO" ],
-  "tTrainStations": [],
-  "uTrainStations": [ "EPO", "HEK", "HKI", "HPL", "ILA", "JRS", "KEA",
+  "T": [],
+  "U": [ "EPO", "HEK", "HKI", "HPL", "ILA", "JRS", "KEA",
     "KHK", "KIL", "KLH", "KNI", "KVH", "LMA", "LPV", "MAS", "MNK", "MÄK",
     "PJM", "PSL", "TOL", "TRL", "VKH", "VMO" ],
-  "yTrainStations": [ "KR", "IKO", "STI", "KKN", "MAS", "LPV", "HKI" ],
-  "zTrainStations": [ "HAA", "HKH", "HLT", "HNA", "HVK", "KE", "KRS",
+  "Y": [ "KR", "IKO", "STI", "KKN", "MAS", "LPV", "HKI" ],
+  "Z": [ "HAA", "HKH", "HLT", "HNA", "HVK", "KE", "KRS",
     "KSU", "KVY", "KYT", "KÄP", "LH", "LÄH", "ML", "MLÄ", "OLK", "PLA",
     "PMK", "PSL", "RKL", "SAV", "SIP", "TKL", "TNA" ]
 }; 
@@ -384,7 +398,7 @@ function plotCStations(obj, icon) {
                ' (' + s.stationShortCode +') ' +
                s.latitude.toFixed(2) + '°N' + ', ' +
                s.longitude.toFixed(2) + '°E';
-    ms.push( L.marker( [ s.latitude, s.longitude ],
+    mark = L.marker( [ s.latitude, s.longitude ],
       {
         draggable: false,
         clickable: true,
@@ -394,10 +408,13 @@ function plotCStations(obj, icon) {
         raiseOnHover: false,
         title: info,
         zIndexOffset: icon[1]
-      }));
+      });
+    mark.on('click', (function(uic) {
+          infoStation(uic); }).bind(this,s.stationUICCode));
+    ms.push(mark);
   }
-  stationLayers[2].clearLayers();
-  stationLayers[2].addLayer(L.layerGroup(ms));
+  layers[2].clearLayers();
+  layers[2].addLayer(L.layerGroup(ms));
 }
 
 function zPad(i, n) {
@@ -410,7 +427,7 @@ function infoUpdate(lat, lng, num) {
 
   if ( typeof(getTrainByNumber(num)) == 'undefined') return;
 
-  info = $('#info').first();
+  info = $('#train-info').first();
   endpoints = getStationByUIC(getTrainByNumber(num).
                                timeTableRows.first().stationUICCode).
                 stationName.replace(/ asema/, '') + '<br>' +
@@ -419,16 +436,19 @@ function infoUpdate(lat, lng, num) {
                 stationName.replace(/ asema/, '');
   train = getTrainByNumber(num);
   if (train.trainCategory == 'Commuter') {
-    $('#info').first().addClass('hsl');
+    $('#train-info').first().addClass('hsl');
     head = train.commuterLineID + ' (' + train.trainNumber + ')';
   } else {
-    $('#info').first().addClass('vr');
-    head = train.trainType + train.trainNumber;
+    $('#train-info').first().addClass('vr');
+    if (train.trainType.charAt(0) == 'H')
+      head = 'H' + train.trainNumber;
+    else
+      head = train.trainType + train.trainNumber;
   }
   head += '<br>' + endpoints;
 
-  $('#info-head').first().html(head);
-  $('#info-loc').first().html(lat + '°N<br>' + lng + '°E');
+  $('#train-info-head').first().html(head);
+  $('#train-info-loc').first().html(lat + '°N<br>' + lng + '°E');
   if ( typeof(train.timeTableRows.first().actualTime) == 'undefined' )
     tmp = new Date(train.timeTableRows.first().scheduledTime);
   else
@@ -443,25 +463,52 @@ function infoUpdate(lat, lng, num) {
   times += 'Saapumisaika: ' + zPad(2, tmp.getHours()) + ':' +
                               zPad(2, tmp.getMinutes()) + '<br>'
 
-  $('#info-times').first().html(times);
-  $('#info-loc').first().html(lat.toFixed(2) + '°N<br>' +
+  $('#train-info-times').first().html(times);
+  $('#train-info-loc').first().html(lat.toFixed(2) + '°N<br>' +
                               lng.toFixed(2) + '°E');
 }
 
-function infoHide() {
-  tracked = undefined;
-  $('#info').first().fadeOut();
+function infoStationHide() {
+  layers[4].clearLayers();
+  $('#station-info').first().fadeOut();
+  $('#station-info').first().removeClass('station-info');
+  clearTimeout(stationInfoTimer);
 }
 
-function infoShow(color, lat, lng, num) {
+function infoStation(uic) {
+  var station = getStationByUIC(uic);
+
+  if ( typeof(station) == 'undefined' ) return;
+  clearTimeout(stationInfoTimer);
+
+  $('#station-info-head').first().text(station.stationName);
+  $('#station-info-times').first().text(station.stationShortCode);
+  $('#station-info-loc').first().text(station.latitude.toFixed(2) + '°N ' +
+                                      station.longitude.toFixed(2) + '°E');
+  $('#station-info').first().addClass('station-info');
+  $('#station-info').first().fadeIn();
+  $('#station-info').one('click', function() { infoStationHide(); });
+  stationInfoTimer = setTimeout(function() { infoStationHide(); }, 1000 * 7);
+}
+
+function infoTrainHide() {
+  tracked = undefined;
+  layers[3].clearLayers();
+  $('#train-info').first().fadeOut();
+  $('#train-info').first().removeClass('vr').removeClass('hsl');
+}
+
+function infoTrain(color, lat, lng, num) {
   tracked = num;
-  $('#info').first().removeClass('vr').removeClass('hsl');
+  $('#train-info').first().removeClass('vr').removeClass('hsl');
   infoUpdate(lat, lng, num);
-  $('#info').first().fadeIn();
-  $('#info').one('click', function() { infoHide(); });
+  $('#train-info').first().fadeIn();
+  $('#train-info').one('click', function() { infoTrainHide(); });
 }
 
 $().ready(function() {
+  for(var i = 0; i < layers.length; i++) layers[i] = L.layerGroup();
+
   var osmBW = new L.TileLayer(
     'http://a.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
     { attribution:
@@ -470,27 +517,22 @@ $().ready(function() {
         'Map data © <a href="http://openstreetmap.org">' +
         'OpenStreetMap</a> contributors' } );   
 
-  var ls = new L.layerGroup();
-  var ps = new L.layerGroup();
-  var ss = new L.layerGroup();
-  var lts = new L.layerGroup();
-  var cts = new L.layerGroup();
-  var paths = new L.layerGroup();
-
   map = L.map('sjl-trains-map', { center: [ 60.860, 24.9327 ],
 //  map = L.map('sjl-trains-map', { center: [ 60.17, 24.9327 ],
-                                  layers: [ cts, lts, paths, osmBW,
-                                            stationLayers[1] ],
+                                  zoomControl: false,
+                                  layers: [ osmBW, layers[1], layers[3],
+                                            layers[5], layers[6] ],
 //                                  zoom: 13 });
                                   zoom: 7 });
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   L.control.layers({ },
                    { 
-                     'Henkilöliikenteen asemat': stationLayers[1],
-                     'Kaikki liikennepaikat': stationLayers[0],
-                     'Lähiliikenteen asemat': stationLayers[2],
-                     'Kaukojunat': lts,
-                     'Lähijunat': cts,
+                     'Henkilöliikenteen asemat': layers[1],
+                     'Kaikki liikennepaikat': layers[0],
+                     'Lähiliikenteen asemat': layers[2],
+                     'Kaukojunat': layers[5],
+                     'Lähijunat': layers[6],
                    }).addTo(map);
 
   if (L.Browser.touch)
@@ -501,7 +543,7 @@ $().ready(function() {
 
   timers.push(setInterval(function() { getMetas(); }, 1000 * 60 * 15));
   timers.push(setInterval(function() { getTrains(); }, 1000 * 120));
-  timers.push(setInterval(function() { getVR(lts, cts, paths); }, 1000 * 5));
+  timers.push(setInterval(function() { getVR(); }, 1000 * 5));
 });
 
 // end of file.
