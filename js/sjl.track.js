@@ -9,6 +9,7 @@ var trafi = 'http://rata.digitraffic.fi/api/v1/';
 var vr_georss = 'http://188.117.35.14/TrainRSS/TrainService.svc/AllTrains'
 
 // Clean this global shit up.
+var tracked;
 var map;
 var stationLayers = [ L.layerGroup(), L.layerGroup(), L.layerGroup() ];
 var compositions;
@@ -17,9 +18,9 @@ var stations;
 var trains;
 var types;
 var trainIcons = { 
-  commuter: L.divIcon({ className: 'sjl-trains-train commuter',
+  commuter: L.divIcon({ className: 'sjl-trains-train hsl',
                         iconSize: [ 12, 25 ] }),
-  longdistance: L.divIcon({ className: 'sjl-trains-train long-distance',
+  longdistance: L.divIcon({ className: 'sjl-trains-train vr',
                             iconSize: [ 12, 25 ] }),
 };
 var stationIcons = {
@@ -155,7 +156,7 @@ function trainInfo(id, lat, lng) {
 
   line = L.polyline(path, { clickable: false,
                             color: '#FF8080',
-                            smoothFactor: 3.0 });
+                            smoothFactor: 2.0 });
 
   if (train.trainCategory == 'Commuter')
     type = train.commuterLineID;
@@ -186,6 +187,7 @@ function updateVR(l, c, rss) {
                getElementsByTagName('item');
   var cs = [];
   var ls = [];
+  var trk = 0;
 
   for(var i = coll.length - 1; i > 0; i--) {
     var dir = coll[i].getElementsByTagName('dir')[0].innerHTML;
@@ -223,7 +225,6 @@ function updateVR(l, c, rss) {
                    opacity: 0.8,
                    riseOffset: 50,
                    riseOnHover: true,
-                   title: info,
                    zIndexOffset: 1000 }).
                  bindLabel(label, { clickable: false,
                                     noHide: true,
@@ -231,11 +232,22 @@ function updateVR(l, c, rss) {
     mark.addEventListener('click', trainInfo.bind(this, num, lat, lng), false);
     mark.setIconAngle(dir);
 
-    if (train.trainCategory == 'Commuter')
+    if (train.trainCategory == 'Commuter') {
+      mark.on('click', infoShow.bind(this, 'hsl', lat, lng, num))
       cs.push(mark);
-    else
+    } else {
+      mark.on('click', infoShow.bind(this, 'vr', lat, lng, num))
       ls.push(mark);
+    }
+
+    if (num == tracked) { trk = tracked; }
   }
+
+  if (trk == 0) 
+    infoHide();
+  else
+    infoUpdate(lat, lng, tracked);
+
   c.clearLayers();
   c.addLayer(L.layerGroup(cs));
   l.clearLayers();
@@ -388,6 +400,67 @@ function plotCStations(obj, icon) {
   stationLayers[2].addLayer(L.layerGroup(ms));
 }
 
+function zPad(i, n) {
+  return (Array(i).join("0") + n).slice(0 - i);
+}
+
+function infoUpdate(lat, lng, num) {
+  var head, loc, endpoints, times, train;
+  var tmp;
+
+  if ( typeof(getTrainByNumber(num)) == 'undefined') return;
+
+  info = $('#info').first();
+  endpoints = getStationByUIC(getTrainByNumber(num).
+                               timeTableRows.first().stationUICCode).
+                stationName.replace(/ asema/, '') + '<br>' +
+              getStationByUIC(getTrainByNumber(num).
+                               timeTableRows.last().stationUICCode).
+                stationName.replace(/ asema/, '');
+  train = getTrainByNumber(num);
+  if (train.trainCategory == 'Commuter') {
+    $('#info').first().addClass('hsl');
+    head = train.commuterLineID + ' (' + train.trainNumber + ')';
+  } else {
+    $('#info').first().addClass('vr');
+    head = train.trainType + train.trainNumber;
+  }
+  head += '<br>' + endpoints;
+
+  $('#info-head').first().html(head);
+  $('#info-loc').first().html(lat + '°N<br>' + lng + '°E');
+  if ( typeof(train.timeTableRows.first().actualTime) == 'undefined' )
+    tmp = new Date(train.timeTableRows.first().scheduledTime);
+  else
+    tmp = new Date(train.timeTableRows.first().actualTime);
+  times = 'Lähtöaika: ' + zPad(2, tmp.getHours()) + ':' +
+                          zPad(2, tmp.getMinutes()) + '<br>'
+
+  if ( typeof(train.timeTableRows.last().actualTime) == 'undefined' )
+    tmp = new Date(train.timeTableRows.last().scheduledTime);
+  else
+    tmp = new Date(train.timeTableRows.last().actualTime);
+  times += 'Saapumisaika: ' + zPad(2, tmp.getHours()) + ':' +
+                              zPad(2, tmp.getMinutes()) + '<br>'
+
+  $('#info-times').first().html(times);
+  $('#info-loc').first().html(lat.toFixed(2) + '°N<br>' +
+                              lng.toFixed(2) + '°E');
+}
+
+function infoHide() {
+  tracked = undefined;
+  $('#info').first().fadeOut();
+}
+
+function infoShow(color, lat, lng, num) {
+  tracked = num;
+  $('#info').first().removeClass('vr').removeClass('hsl');
+  infoUpdate(lat, lng, num);
+  $('#info').first().fadeIn();
+  $('#info').one('click', function() { infoHide(); });
+}
+
 $().ready(function() {
   var osmBW = new L.TileLayer(
     'http://a.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
@@ -404,9 +477,11 @@ $().ready(function() {
   var cts = new L.layerGroup();
   var paths = new L.layerGroup();
 
-  map = L.map('sjl-trains-map', { center: [ 60.860, 24.994 ],
+  map = L.map('sjl-trains-map', { center: [ 60.860, 24.9327 ],
+//  map = L.map('sjl-trains-map', { center: [ 60.17, 24.9327 ],
                                   layers: [ cts, lts, paths, osmBW,
                                             stationLayers[1] ],
+//                                  zoom: 13 });
                                   zoom: 7 });
 
   L.control.layers({ },
@@ -424,9 +499,7 @@ $().ready(function() {
   getTrains();
   getMetas();
 
-  timers.push(setInterval(function() {
-                            getMetas(ls, ps, ss, function() {});
-                          }, 1000 * 60 * 15));
+  timers.push(setInterval(function() { getMetas(); }, 1000 * 60 * 15));
   timers.push(setInterval(function() { getTrains(); }, 1000 * 120));
   timers.push(setInterval(function() { getVR(lts, cts, paths); }, 1000 * 5));
 });
