@@ -145,17 +145,11 @@ function getVR() {
                  updateVR(data.results[0]); });
 }
 
-function trainInfo(id, lat, lng) {
-  var departure, arrival, infoContent, tmp;
-  var group = new L.LayerGroup();
-  var i;
-  var label;
-  var line;
+function infoPath(id) {
+  var line, lineClass;
   var path = [];
   var pathUICs = [];
-  var station;
   var train = getTrainByNumber(id);
-  var type;
 
   if (typeof(train) == 'undefined') return;
 
@@ -166,27 +160,15 @@ function trainInfo(id, lat, lng) {
                      path.push([ station.latitude, station.longitude ]);
                    });
 
+  if (train.trainCategory == 'Commuter')
+    lineClass = 'hsl';
+  else
+    lineClass = 'vr';
+
   line = L.polyline(path, { clickable: false,
                             color: '#FF8080',
                             smoothFactor: 2.0,
                             opacity: 0.3 });
-
-  if (train.trainCategory == 'Commuter')
-    type = train.commuterLineID;
-  else
-    type = train.trainType + ' ' + train.trainNumber;
-
-  tmp = train.timeTableRows[train.timeTableRows.length - 1];
-  if (typeof(tmp.liveEstimateTime) == 'undefined')
-    arrival = tmp.scheduledTime;
-  else
-    arrival = tmp.liveEstimateTime;
-
-  tmp = train.timeTableRows[0];
-  if (typeof(tmp.actualTime) == 'undefined')
-    departure = tmp.scheduledTime;
-  else
-    departure = tmp.actualTime;
 
   layers[3].clearLayers();
   layers[3].addLayer(line);
@@ -500,6 +482,7 @@ function infoTrainHide() {
 
 function infoTrain(color, lat, lng, num) {
   tracked = num;
+  infoPath(num);
   $('#train-info').first().removeClass('vr').removeClass('hsl');
   infoUpdate(lat, lng, num);
   $('#train-info').first().fadeIn();
@@ -520,8 +503,10 @@ $().ready(function() {
   map = L.map('sjl-trains-map', { center: [ 60.860, 24.9327 ],
 //  map = L.map('sjl-trains-map', { center: [ 60.17, 24.9327 ],
                                   zoomControl: false,
-                                  layers: [ osmBW, layers[1], layers[3],
-                                            layers[5], layers[6] ],
+                                  layers: [ osmBW,
+                                            layers[1], layers[3],
+                                            layers[4], layers[5],
+                                            layers[6] ],
 //                                  zoom: 13 });
                                   zoom: 7 });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
