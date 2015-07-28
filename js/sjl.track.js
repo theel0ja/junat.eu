@@ -411,9 +411,9 @@ $().ready(function() {
 
   L.control.layers({ },
                    { 
-                     'Henkilöliikenteen asemat': stationLayers[2],
+                     'Henkilöliikenteen asemat': stationLayers[1],
                      'Kaikki liikennepaikat': stationLayers[0],
-                     'Lähiliikenteen asemat': stationLayers[1],
+                     'Lähiliikenteen asemat': stationLayers[2],
                      'Kaukojunat': lts,
                      'Lähijunat': cts,
                    }).addTo(map);
