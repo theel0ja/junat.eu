@@ -29,28 +29,68 @@
     <script src="http://leaflet.github.io/Leaflet.label/leaflet.label.js"> </script>
     <script src="http://github.junat.eu/js/leaflet.marker.rotate.js"></script>
     <script src="http://github.junat.eu/js/leaflet.touch.js"></script>
-    <link rel="stylesheet" href="http://github.junat.eu/css/sjl.trains.css" />
+
+    <link rel="stylesheet" href="http://github.junat.eu/css/junat.eu.css" />
     <script src="http://github.junat.eu/js/sjl.util.js"></script>
-    <script src="http://github.junat.eu/js/sjl.track.js"></script>
+    <script src="http://github.junat.eu/js/junat.eu.js"></script>
+
   </head>
   <body>
-    <div id="sjl-trains-map"></div>
+    <div id="train-map"></div>
 
-    <div id="train-info" class="sjl-trains-overlay sjl-trains-info-popup">
-      <div id="train-info-head" class="sjl-trains-overlay-header">
-      </div>
-      <div id="train-info-times" class="sjl-trains-overlay-times">
-      </div>
-      <div id="train-info-loc" class="sjl-trains-overlay-loc">
-      </div>
+<!-- info displays -->
+<div class="info-displays">
+<div class="info-display station" id="info-station">
+    <div class="info-row">
+         <h1 id="info-station-name">info-station-name</h1>
+
+        <ul class="info-head-details">
+            <li id="info-station-lat"></li>
+            <li id="info-station-lng"></li>
+            <li id="info-station-code"></li>
+        </ul>
     </div>
-    <div id="station-info" class="sjl-trains-overlay sjl-station-info-popup">
-      <div id="station-info-head" class="sjl-trains-overlay-header">
-      </div>
-      <div id="station-info-times" class="sjl-trains-overlay-times">
-      </div>
-      <div id="station-info-loc" class="sjl-trains-overlay-loc">
-      </div>
+</div>
+<div class="info-display" id="info-train">
+    <div class="info-row">
+        <div id="info-train-name"></div>
+        <ul class="info-head-details">
+            <li id="info-train-lat"></li>
+            <li id="info-train-lng"></li>
+            <li id="info-train-number"></li>
+        </ul>
     </div>
+    <div class="info-row">
+        <table class="info-timetable">
+            <tr>
+                <td class="info-timetable-time" id="info-departure-time"></td>
+                <td class="info-timetable-station" id="info-departure-station"></td>
+            </tr>
+            <tr>
+                <td class="info-timetable-time" id="info-arrival-time"></td>
+                <td class="info-timetable-station" id="info-destination-station"></td>
+            </tr>
+        </table>
+    </div>
+    <div class="info-row">
+        <table class="info-timetable">
+            <tr>
+                <td class="info-timetable-time"></td>
+                <td class="info-timetable-station"></td>
+            </tr>
+            <tr>
+                <td class="info-timetable-time"></td>
+                <td class="info-timetable-station"></td>
+            </tr>
+            <tr>
+                <td class="info-timetable-time"></td>
+                <td class="info-timetable-station"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+</div>
+<!-- end of info displays -->
+
   </body>
 </html>

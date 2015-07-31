@@ -30,17 +30,17 @@ var stations;
 var trains;
 var types;
 var trainIcons = { 
-  commuter: L.divIcon({ className: 'sjl-trains-train hsl',
+  commuter: L.divIcon({ className: 'trains-train hsl',
                         iconSize: [ 12, 25 ] }),
-  longdistance: L.divIcon({ className: 'sjl-trains-train vr',
+  longdistance: L.divIcon({ className: 'trains-train vr',
                             iconSize: [ 12, 25 ] }),
 };
 var stationIcons = {
-  generic: [ L.divIcon({ className: 'sjl-trains-station generic',
+  generic: [ L.divIcon({ className: 'trains-station generic',
                          iconSize: [ 5, 5 ] }), -100 ],
-  commuter: [ L.divIcon({ className: 'sjl-trains-station commuter',
+  commuter: [ L.divIcon({ className: 'trains-station commuter',
                         iconSize: [ 5, 5 ] }), 200 ],
-  person: [ L.divIcon({ className: 'sjl-trains-station person',
+  person: [ L.divIcon({ className: 'trains-station person',
                       iconSize: [ 5, 5 ] }), 100 ]
 };
 var timers = [];
@@ -133,8 +133,9 @@ function getTrains() {
 
 function getVR() {
   /* 
-   * Use Yahoo API to get past cross-domain query restrictions.
-   * Usable for some tiny, small crap like VR live RSS.
+   * Stealth CORS: Call Yahoo API to get jsonp instead of raw RSS
+   * and hece go past cross-domain query restrictions.
+   * Usable only for some tiny, smiall crap like VR live RSS.
    */
   $.getJSON("http://query.yahooapis.com/v1/public/yql?"+
             "q=select%20*%20from%20html%20where%20url%3D%22"+
@@ -201,8 +202,9 @@ function updateVR(rss) {
       /* Commuter trains outside Helsinki region. */
       icon = trainIcons['commuter'];
     } else {
-      if (train.trainType.charAt(0) == 'H')
-        label = 'H' + num;
+      if (train.trainType.charAt(0) == 'H' ||
+          train.trainType.charAt(0) == 'P')
+        label = train.trainType.charAt(0) + num;
       else
         label = train.trainType + num;
       icon = trainIcons['longdistance'];
@@ -404,56 +406,51 @@ function zPad(i, n) {
 }
 
 function infoUpdate(lat, lng, num) {
-  var head, loc, endpoints, times, train;
-  var tmp;
+  var name;
+  var train = getTrainByNumber(num);
+  var station, uic;
 
-  if ( typeof(getTrainByNumber(num)) == 'undefined') return;
+  if ( train == 'undefined') return;
 
-  info = $('#train-info').first();
-  endpoints = getStationByUIC(getTrainByNumber(num).
-                               timeTableRows.first().stationUICCode).
-                stationName.replace(/ asema/, '') + '<br>' +
-              getStationByUIC(getTrainByNumber(num).
-                               timeTableRows.last().stationUICCode).
-                stationName.replace(/ asema/, '');
-  train = getTrainByNumber(num);
   if (train.trainCategory == 'Commuter') {
-    $('#train-info').first().addClass('hsl');
-    head = train.commuterLineID + ' (' + train.trainNumber + ')';
+    name = train.commuterLineID;
   } else {
-    $('#train-info').first().addClass('vr');
-    if (train.trainType.charAt(0) == 'H')
-      head = 'H' + train.trainNumber;
+    if (train.trainType.charAt(0) == 'H' ||
+        train.trainType.charAt(0) == 'P')
+      name = train.trainType.charAt(0) + train.trainNumber;
     else
-      head = train.trainType + train.trainNumber;
+      name = train.trainType + train.trainNumber;
   }
-  head += '<br>' + endpoints;
 
-  $('#train-info-head').first().html(head);
-  $('#train-info-loc').first().html(lat + '°N<br>' + lng + '°E');
+  $('#info-train-name').text(name);
+  $('#info-train-number').text(num);
+  $('#info-train-lat').text(lat.toFixed(2) + '°N');
+  $('#info-train-lng').text(lng.toFixed(2) + '°E');
+
+  uic = train.timeTableRows.first().stationUICCode;
+  station = getStationByUIC(uic).stationName.replace(/_/g, ' ');
+  $('#info-departure-station').text(station);
+  uic = train.timeTableRows.last().stationUICCode;
+  station = getStationByUIC(uic).stationName.replace(/_/g, ' ');
+  $('#info-destination-station').text(station);
+
   if ( typeof(train.timeTableRows.first().actualTime) == 'undefined' )
     tmp = new Date(train.timeTableRows.first().scheduledTime);
   else
     tmp = new Date(train.timeTableRows.first().actualTime);
-  times = 'Lähtöaika: ' + zPad(2, tmp.getHours()) + ':' +
-                          zPad(2, tmp.getMinutes()) + '<br>'
+  $('#info-departure-time').
+    text(zPad(2, tmp.getHours()) + ':' + zPad(2, tmp.getMinutes()));
 
   if ( typeof(train.timeTableRows.last().actualTime) == 'undefined' )
     tmp = new Date(train.timeTableRows.last().scheduledTime);
   else
     tmp = new Date(train.timeTableRows.last().actualTime);
-  times += 'Saapumisaika: ' + zPad(2, tmp.getHours()) + ':' +
-                              zPad(2, tmp.getMinutes()) + '<br>'
-
-  $('#train-info-times').first().html(times);
-  $('#train-info-loc').first().html(lat.toFixed(2) + '°N<br>' +
-                              lng.toFixed(2) + '°E');
+  $('#info-arrival-time').
+    text(zPad(2, tmp.getHours()) + ':' + zPad(2, tmp.getMinutes()));
 }
 
 function infoStationHide() {
-  layers[4].clearLayers();
-  $('#station-info').first().fadeOut();
-  $('#station-info').first().removeClass('station-info');
+  $('#info-station').fadeOut(400);
   clearTimeout(stationInfoTimer);
 }
 
@@ -461,32 +458,33 @@ function infoStation(uic) {
   var station = getStationByUIC(uic);
 
   if ( typeof(station) == 'undefined' ) return;
+
   clearTimeout(stationInfoTimer);
 
-  $('#station-info-head').first().text(station.stationName);
-  $('#station-info-times').first().text(station.stationShortCode);
-  $('#station-info-loc').first().text(station.latitude.toFixed(2) + '°N ' +
-                                      station.longitude.toFixed(2) + '°E');
-  $('#station-info').first().addClass('station-info');
-  $('#station-info').first().fadeIn();
-  $('#station-info').one('click', function() { infoStationHide(); });
+  $('#info-station-name').text(station.stationName);
+  $('#info-station-lat').text(station.latitude.toFixed(2) + '°N');
+  $('#info-station-lng').text(station.longitude.toFixed(2) + '°E');
+  $('#info-station-code').text(station.stationShortCode);
+  $('#info-station').fadeIn(400);
+  $('#info-station').one('click', function() { infoStationHide(); });
+
   stationInfoTimer = setTimeout(function() { infoStationHide(); }, 1000 * 7);
 }
 
 function infoTrainHide() {
   tracked = undefined;
-  layers[3].clearLayers();
-  $('#train-info').first().fadeOut();
-  $('#train-info').first().removeClass('vr').removeClass('hsl');
+  $('#info-train').fadeOut(400);
 }
 
 function infoTrain(color, lat, lng, num) {
   tracked = num;
   infoPath(num);
-  $('#train-info').first().removeClass('vr').removeClass('hsl');
+
   infoUpdate(lat, lng, num);
-  $('#train-info').first().fadeIn();
-  $('#train-info').one('click', function() { infoTrainHide(); });
+  $('#info-train').removeClass('hsl').removeClass('vr');
+  $('#info-train').addClass(color);
+  $('#info-train').fadeIn(400);
+  $('#info-train').one('click', function() { infoTrainHide(); });
 }
 
 $().ready(function() {
@@ -500,7 +498,7 @@ $().ready(function() {
         'Map data © <a href="http://openstreetmap.org">' +
         'OpenStreetMap</a> contributors' } );   
 
-  map = L.map('sjl-trains-map', { center: [ 60.860, 24.9327 ],
+  map = L.map('train-map', { center: [ 60.860, 24.9327 ],
 //  map = L.map('sjl-trains-map', { center: [ 60.17, 24.9327 ],
                                   zoomControl: false,
                                   layers: [ osmBW,
