@@ -325,6 +325,7 @@ function plotPStations(arr, icon) {
   layers[1].addLayer(L.layerGroup(ms));
 }
 
+var LStations = [];
 var CStations =
 {
   "A": [ "HKI", "HPL", "ILA", "KHK", "MÄK", "PJM", "PSL", "VMO" ],
@@ -473,14 +474,43 @@ function infoStation(uic) {
 
 function infoTrainHide() {
   tracked = undefined;
+  layers[3].clearLayers();
   $('#info-train').fadeOut(400);
 }
 
 function infoTrain(color, lat, lng, num) {
+  var d, i, l, r, s, t;
+
   tracked = num;
   infoPath(num);
 
+  l = document.getElementById('info-path-timetable');
+  for (i = l.rows.length; i > 0; i--) l.deleteRow(-1);
+
   infoUpdate(lat, lng, num);
+
+  if (getTrainByNumber(num).trainCategory == 'Long-distance') {
+  t = getTrainByNumber(num).timeTableRows;
+
+  for (i = 1; i < t.length - 1; i += 2) {
+    s = getStationByCode(t[i].stationShortCode);
+    if (PStations.indexOf(t[i].stationShortCode) == -1) continue;
+
+    r = l.insertRow();
+    r.insertCell();
+    r.insertCell();
+    r.cells[0].setAttribute('class', 'info-timetable-time');
+    r.cells[1].setAttribute('class', 'info-timetable-station');
+    if ( typeof(t[i].actualTime) == 'undefined' )
+      d = new Date(t[i].scheduledTime);
+    else
+      d = new Date(t[i].actualTime);
+    r.cells[0].innerHTML = zPad(2, d.getHours()) + ':' +
+                           zPad(2, d.getMinutes());
+    r.cells[1].innerHTML = s.stationName;
+  }
+  }
+
   $('#info-train').removeClass('hsl').removeClass('vr');
   $('#info-train').addClass(color);
   $('#info-train').fadeIn(400);
@@ -488,20 +518,31 @@ function infoTrain(color, lat, lng, num) {
 }
 
 $().ready(function() {
-  for(var i = 0; i < layers.length; i++) layers[i] = L.layerGroup();
+  var tiles;
+  var tileset = localStorage.getItem('junat.eu-tileset');
 
-  var osmBW = new L.TileLayer(
-    'http://a.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
-    { attribution:
-        '<a href="https://github.com/samilaine/junat.eu">Sorsat</a>' +
-        ' | ' +
-        'Map data © <a href="http://openstreetmap.org">' +
-        'OpenStreetMap</a> contributors' } );   
+  for(var i = 0; i < layers.length; i++) layers[i] = L.layerGroup();
+  for (k in CStations) { LStations = LStations.union(CStations[k]); }
+
+  if (typeof(tileset) != 'undefined') {
+    switch (tileset) {
+      case 'osmbw':
+      default:
+        var osmbw = new L.TileLayer(
+          'http://a.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
+          { attribution:
+              '<a href="https://github.com/samilaine/junat.eu">Sorsat</a>' +
+              ' | ' +
+              'Map data © <a href="http://openstreetmap.org">' +
+              'OpenStreetMap</a> contributors' } );   
+        tiles = osmbw;
+    }
+  }
 
   map = L.map('train-map', { center: [ 60.860, 24.9327 ],
 //  map = L.map('sjl-trains-map', { center: [ 60.17, 24.9327 ],
                                   zoomControl: false,
-                                  layers: [ osmBW,
+                                  layers: [ tiles,
                                             layers[1], layers[3],
                                             layers[4], layers[5],
                                             layers[6] ],
@@ -518,11 +559,11 @@ $().ready(function() {
                      'Lähijunat': layers[6],
                    }).addTo(map);
 
-  if (L.Browser.touch)
-    L.control.touchHover().addTo(map);
-
   getTrains();
   getMetas();
+
+  if (L.Browser.touch)
+    L.control.touchHover().addTo(map);
 
   timers.push(setInterval(function() { getMetas(); }, 1000 * 60 * 15));
   timers.push(setInterval(function() { getTrains(); }, 1000 * 120));
