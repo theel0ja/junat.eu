@@ -489,7 +489,8 @@ function infoTrain(color, lat, lng, num) {
 
   infoUpdate(lat, lng, num);
 
-  if (getTrainByNumber(num).trainCategory == 'Long-distance') {
+  /* Aren't we responsive today? We sure are. */
+  if ($(document).height() > 380) {
   t = getTrainByNumber(num).timeTableRows;
 
   for (i = 1; i < t.length - 1; i += 2) {
@@ -511,10 +512,21 @@ function infoTrain(color, lat, lng, num) {
   }
   }
 
-  $('#info-train').removeClass('hsl').removeClass('vr');
-  $('#info-train').addClass(color);
+//  $('#info-train').removeClass('hsl').removeClass('vr');
+//  $('#info-train').addClass(color);
   $('#info-train').fadeIn(400);
-  $('#info-train').one('click', function() { infoTrainHide(); });
+  if ($('#info-path-timetable').height() > 80) {
+    $('#info-train-nano').addClass('nano');
+    $('#info-train-nano-content').addClass('nano-content');
+    $('#info-train-nano').nanoScroller({ alwaysVisible: true,
+                                         scroll: 'top' });
+  } else {
+    $(".nano").nanoScroller({ stop: true });
+    $('#info-train-nano').removeClass('nano');
+    $('#info-train-nano-content').removeClass('nano-content');
+    $('#info-path-nano').height($('#info-path-timetable').height());
+  }
+  $('#info-train').one('click', infoTrainHide.bind());
 }
 
 $().ready(function() {

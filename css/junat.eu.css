@@ -1,44 +1,47 @@
-@import url(//fonts.googleapis.com/css?family=BenchNine);
 @import url(//fonts.googleapis.com/css?family=Open+Sans);
 
+/* nanoScroller.js */
+.nano { width: 200px; height: 80px; }
+.nano .nano-content { padding: 0px 8px 0px 0px; }
+.nano .nano-pane   { background: #888; width: 4px; }
+.nano .nano-slider { background: #111; width: 4px; }
+/* end of nanoScroller.js */
+
+body { font-family: 'Open Sans'; }
+
 /* info displays */
-
-body {
-    font-family:'BenchNine';
-}
-
 .info-displays {
     display: table;
-    font-family: 'Open Sans';
+    font-family:'Open Sans';
     left: 5px !important;
     position: absolute !important;
     top: 5px !important;
     width: 200px;
-
     filter: alpha(opacity=80);
     -moz-opacity: 0.8;
     -khtml-opacity: 0.8;
     opacity: 0.8;
 }
 .info-display {
-    background-color: blue;
+    background-color: white;
     border-radius: 4px;
-//    color: white;
+    border: 1px solid black;
     display: none;
     font-weigth: normal;
-    margin: 1px;
+    margin: 3px;
     overflow: hidden;
     padding: 8px;
+    width: 200px;
     z-index: 99999;
 }
 .info-displays {
     display: table;
 }
 .info-row {
+/*        border: 1px solid black;*/
     display: block;
 }
-#info-station-code, #info-station-lat, #info-station-long,
-#info-train-number, #info-train-lat, #info-train-long {
+#info-station-code, #info-station-lat, #info-station-long, #info-train-number, #info-train-lat, #info-train-long {
     display: list-item;
 }
 #info-station-name, #info-train-name {
@@ -69,15 +72,18 @@ body {
     font-size: 13px;
     text-align: right;
 }
+#row-info-path-timetable {
+    height: 80px;
+}
 .info-timetable {
-    float: left;
+    display: block;
     font: normal normal normal 8px sans-serif;
     width: 100%;
 }
 .info-timetable-station {
     text-align: right;
+    width: 99%;
 }
-
 /* end of info displays */
 
 /* operator colors */
@@ -89,55 +95,46 @@ body {
 /* not exactly an operator color, but ... */
 .station {
     background: white;
-    border: 2px solid black;
-    //color: black;
+    /* border: 2px solid #black; */
     color: #111111;
 }
 .vr {
-    background: #80CC99; 
+    background: #80CC99;
     border: 2px solid #009933;
-    //color: black;
     color: #111111;
-} 
+}
 /* end of operator colors */
 
 /* station and train icons */
 .trains-station {
-  border-radius: 3px 3px 3px 3px;
-  display: block;
-  height: 25px;
-  width: 25px;
+    border-radius: 3px 3px 3px 3px;
+    display: block;
+    height: 25px;
+    width: 25px;
 }
-
 .trains-station.generic {
-  background: #E6E6FF;
-  border: 2px solid #8080FF;
+    background: #E6E6FF;
+    border: 2px solid #8080FF;
 }
-
 .trains-station.commuter {
-  background: #7bbfe4;
-  border: 2px solid #218acb;
+    background: #7bbfe4;
+    border: 2px solid #218acb;
 }
-
 .trains-station.person {
-  background: #d4ebce;
-  border: 2px solid #65b748;
+    background: #d4ebce;
+    border: 2px solid #65b748;
 }
-
 .trains-train {
-  display: block;
-  width: 10px;
-  height: 30px;
-  border-radius: 10px 10px 3px 3px;
+    display: block;
+    width: 10px;
+    height: 30px;
+    border-radius: 10px 10px 3px 3px;
 }
-
 /* end of station and train icons */
-
 #train-map {
-  bottom: 0px;
-  left: 0px;
-  position: absolute;
-  right: 0px;
-  top: 0px;
+    bottom: 0px;
+    left: 0px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
 }
-

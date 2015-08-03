@@ -19,14 +19,15 @@
 
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
-<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.nanoscroller/0.8.7/css/nanoscroller.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nanoscroller/0.8.7/javascripts/jquery.nanoscroller.min.js"></script>
+
     <link rel="stylesheet" href="http://github.junat.eu/css/leaflet.label.css" />
     <script src="http://leaflet.github.io/Leaflet.label/leaflet.label.js"> </script>
+
     <script src="http://github.junat.eu/js/leaflet.marker.rotate.js"></script>
     <script src="http://github.junat.eu/js/leaflet.touch.js"></script>
 
@@ -42,7 +43,7 @@
 <div class="info-displays">
 <div class="info-display station" id="info-station">
     <div class="info-row">
-         <h1 id="info-station-name">info-station-name</h1>
+         <h1 id="info-station-name"></h1>
 
         <ul class="info-head-details">
             <li id="info-station-lat"></li>
@@ -66,25 +67,21 @@
                 <td class="info-timetable-time" id="info-departure-time"></td>
                 <td class="info-timetable-station" id="info-departure-station"></td>
             </tr>
-            <tr>
-                <td class="info-timetable-time" id="info-arrival-time"></td>
-                <td class="info-timetable-station" id="info-destination-station"></td>
-            </tr>
         </table>
     </div>
     <div class="info-row">
-        <table class="info-timetable" id="info-path-timetable">
+        <div id="info-train-nano">
+            <div id="info-train-nano-content">
+                <table class="info-timetable" id="info-path-timetable">
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="info-row">
+        <table class="info-timetable">
             <tr>
-                <td class="info-timetable-time"></td>
-                <td class="info-timetable-station"></td>
-            </tr>
-            <tr>
-                <td class="info-timetable-time"></td>
-                <td class="info-timetable-station"></td>
-            </tr>
-            <tr>
-                <td class="info-timetable-time"></td>
-                <td class="info-timetable-station"></td>
+                <td class="info-timetable-time" id="info-arrival-time"></td>
+                <td class="info-timetable-station" id="info-destination-station"></td>
             </tr>
         </table>
     </div>
