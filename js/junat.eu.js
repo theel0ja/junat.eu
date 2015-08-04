@@ -475,7 +475,11 @@ function infoStation(uic) {
 function infoTrainHide() {
   tracked = undefined;
   layers[3].clearLayers();
-  $('#info-train').fadeOut(400);
+  $('#info-train').fadeOut(400, function() {
+    $('.nano').nanoScroller({ stop: true });
+    $('#info-train-nano').removeClass('nano');
+    $('#info-train-nano-content').removeClass('nano-content');
+  });
 }
 
 function infoTrain(color, lat, lng, num) {
@@ -518,10 +522,11 @@ function infoTrain(color, lat, lng, num) {
   if ($('#info-path-timetable').height() > 80) {
     $('#info-train-nano').addClass('nano');
     $('#info-train-nano-content').addClass('nano-content');
-    $('#info-train-nano').nanoScroller({ alwaysVisible: true,
-                                         scroll: 'top' });
+//    $('#info-train-nano').nanoScroller({ alwaysVisible: true,
+//                                         scroll: 'top' });
+    $('.nano').nanoScroller({ alwaysVisible: true, scroll: 'top' });
   } else {
-    $(".nano").nanoScroller({ stop: true });
+    $('.nano').nanoScroller({ stop: true });
     $('#info-train-nano').removeClass('nano');
     $('#info-train-nano-content').removeClass('nano-content');
     $('#info-path-nano').height($('#info-path-timetable').height());
