@@ -2,9 +2,9 @@
 
 /* nanoScroller.js */
 .nano { width: 200px; height: 80px; }
-.nano .nano-content { padding: 0px 8px 0px 0px; }
-.nano .nano-pane   { background: #888; width: 4px; }
-.nano .nano-slider { background: #111; width: 4px; }
+.nano > .nano-content { padding: 0px 8px 0px 0px; }
+.nano > .nano-pane   { background: #888; width: 4px; }
+.nano > .nano-pane > .nano-slider { background: #111; width: 4px; }
 /* end of nanoScroller.js */
 
 body { font-family: 'Open Sans'; }
