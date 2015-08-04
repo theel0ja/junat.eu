@@ -452,7 +452,7 @@ function infoUpdate(lat, lng, num) {
 
 function infoStationHide() {
   $('#info-station').fadeOut(400);
-  // clearTimeout(stationInfoTimer);
+  clearTimeout(stationInfoTimer);
 }
 
 function infoStation(uic) {
@@ -460,7 +460,7 @@ function infoStation(uic) {
 
   if ( typeof(station) == 'undefined' ) return;
 
-  // clearTimeout(stationInfoTimer);
+  clearTimeout(stationInfoTimer);
 
   $('#info-station-name').text(station.stationName);
   $('#info-station-lat').text(station.latitude.toFixed(2) + '°N');
@@ -469,13 +469,17 @@ function infoStation(uic) {
   $('#info-station').fadeIn(400);
   $('#info-station').one('click', function() { infoStationHide(); });
 
-  // stationInfoTimer = setTimeout(function() { infoStationHide(); }, 1000 * 7);
+  stationInfoTimer = setTimeout(function() { infoStationHide(); }, 1000 * 7);
 }
 
 function infoTrainHide() {
   tracked = undefined;
   layers[3].clearLayers();
-  $('#info-train').fadeOut(400);
+  $('#info-train').fadeOut(400, function() {
+    $('.nano').nanoScroller({ stop: true });
+    $('#info-train-nano').removeClass('nano');
+    $('#info-train-nano-content').removeClass('nano-content');
+  });
 }
 
 function infoTrain(color, lat, lng, num) {
@@ -491,37 +495,44 @@ function infoTrain(color, lat, lng, num) {
 
   /* Aren't we responsive today? We sure are. */
   if ($(document).height() > 380) {
-    t = getTrainByNumber(num).timeTableRows;
+  t = getTrainByNumber(num).timeTableRows;
 
-    for (i = 1; i < t.length - 1; i += 2) {
-      s = getStationByCode(t[i].stationShortCode);
-      // if (PStations.indexOf(t[i].stationShortCode) == -1) continue;
+  for (i = 1; i < t.length - 1; i += 2) {
+    s = getStationByCode(t[i].stationShortCode);
+    // if (PStations.indexOf(t[i].stationShortCode) == -1) continue;
+    if (!t[i].trainStopping) continue;
 
-      r = l.insertRow();
-      r.insertCell();
-      r.insertCell();
-      r.cells[0].setAttribute('class', 'info-timetable-time');
-      r.cells[1].setAttribute('class', 'info-timetable-station');
-      if ( typeof(t[i].actualTime) == 'undefined' )
-        d = new Date(t[i].scheduledTime);
-      else
-        d = new Date(t[i].actualTime);
-      r.cells[0].innerHTML = zPad(2, d.getHours()) + ':' +
-                             zPad(2, d.getMinutes());
-      r.cells[1].innerHTML = s.stationName;
-    }
+    r = l.insertRow();
+    r.insertCell();
+    r.insertCell();
+    r.cells[0].setAttribute('class', 'info-timetable-time');
+    r.cells[1].setAttribute('class', 'info-timetable-station');
+    if ( typeof(t[i].actualTime) == 'undefined' )
+      d = new Date(t[i].scheduledTime);
+    else
+      d = new Date(t[i].actualTime);
+    r.cells[0].innerHTML = zPad(2, d.getHours()) + ':' +
+                           zPad(2, d.getMinutes());
+    r.cells[1].innerHTML = s.stationName;
+  }
   }
 
+//  $('#info-train').removeClass('hsl').removeClass('vr');
+//  $('#info-train').addClass(color);
   $('#info-train').fadeIn(400);
-  if ($('#info-path-timetable').height() >= 80) {
+  if ($('#info-path-timetable').height() > 80) {
     $('#info-train-nano').addClass('nano');
     $('#info-train-nano-content').addClass('nano-content');
-    $('.nano').nanoScroller( { alwaysVisible: true } );
+    $('.nano').nanoScroller({ alwaysVisible: true, scroll: 'top' });
+    /* This looks redundant, but it's not. Quite often timetable
+     * changes in size this takes care of this after "stop" below. */
+    $('.nano').nanoScroller();
   } else {
-    $('.nano').nanoScroller( { stop: true } );
+    // destroy does not work at all
+    $('.nano').nanoScroller({ stop: true });
     $('#info-train-nano').removeClass('nano');
     $('#info-train-nano-content').removeClass('nano-content');
-    $('#info-train-nano').height($('#info-path-timetable').height());
+    $('#info-path-nano').height($('#info-path-timetable').height());
   }
   $('#info-train').one('click', infoTrainHide.bind());
 }
