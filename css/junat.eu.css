@@ -138,3 +138,10 @@ body { font-family: 'Open Sans'; }
     right: 0px;
     top: 0px;
 }
+
+/* leafletjs */
+.leaflet-control {
+    font-family: 'Open Sans';
+}
+/* end of file. */
+

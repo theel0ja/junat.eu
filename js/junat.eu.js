@@ -452,7 +452,6 @@ function infoUpdate(lat, lng, num) {
 
 function infoStationHide() {
   $('#info-station').fadeOut(400);
-  clearTimeout(stationInfoTimer);
 }
 
 function infoStation(uic) {
@@ -460,16 +459,12 @@ function infoStation(uic) {
 
   if ( typeof(station) == 'undefined' ) return;
 
-  clearTimeout(stationInfoTimer);
-
   $('#info-station-name').text(station.stationName);
   $('#info-station-lat').text(station.latitude.toFixed(2) + '°N');
   $('#info-station-lng').text(station.longitude.toFixed(2) + '°E');
   $('#info-station-code').text(station.stationShortCode);
   $('#info-station').fadeIn(400);
   $('#info-station').one('click', function() { infoStationHide(); });
-
-  stationInfoTimer = setTimeout(function() { infoStationHide(); }, 1000 * 7);
 }
 
 function infoTrainHide() {
