@@ -19,7 +19,6 @@ var vr_georss = 'http://188.117.35.14/TrainRSS/TrainService.svc/AllTrains'
  * 6 = commuter trains
  */
 var layers = Array(7);
-var stationInfoTimer;
 
 // Clean this global shit up.
 var tracked;
