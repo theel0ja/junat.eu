@@ -146,32 +146,53 @@ function getVR() {
 }
 
 function infoPath(id) {
-  var line, lineClass;
+  var actual, scheduled;
+  var departure, arrival;
+  var c, i, line, lineClass;
   var path = [];
   var pathUICs = [];
   var train = getTrainByNumber(id);
+  var timeLines = [];
 
   if (typeof(train) == 'undefined') return;
 
-  train.timeTableRows.unique().forEach(function(c, i, a) {
-                                         pathUICs.push(c.stationUICCode); });
-  pathUICs.forEach(function(c, i, a) {
-                     station =  getStationByUIC(c);
-                     path.push([ station.latitude, station.longitude ]);
-                   });
+  for(var i = 0; i < train.timeTableRows.length - 1; i += 2) {
+    if (typeof(train.timeTableRows[i + 1]) == 'undefined') break;
+    
+    c = '#00CC00';
+    if (typeof(train.timeTableRows[i].actualTime) == 'undefined') {
+      c = '#808080';
+    }
 
-  if (train.trainCategory == 'Commuter')
-    lineClass = 'hsl';
-  else
-    lineClass = 'vr';
+    if (typeof(train.timeTableRows[i].actualTime) != 'undefined') {
+      actual = new Date(train.timeTableRows[i].actualTime);
+      scheduled = new Date(train.timeTableRows[i].scheduledTime);
+      if (actual > scheduled)
+        c = '#FFFF66';
+    } 
 
-  line = L.polyline(path, { clickable: false,
-                            color: '#FF8080',
-                            smoothFactor: 2.0,
-                            opacity: 0.3 });
+    if (typeof(train.timeTableRows[i + 1].actualTime) != 'undefined') {
+      actual = new Date(train.timeTableRows[i + 1].actualTime);
+      scheduled = new Date(train.timeTableRows[i + 1].scheduledTime);
+      if (actual > scheduled)
+        c = '#FF0000';
+    }
+
+    path = [];
+    station =  getStationByUIC(train.timeTableRows[i].stationUICCode);
+    path.push([ station.latitude, station.longitude ]);
+    station =  getStationByUIC(train.timeTableRows[i + 1].stationUICCode);
+    path.push([ station.latitude, station.longitude ]);
+    line = L.polyline(path,
+                      { clickable: false,
+                        color: c,
+                        smoothFactor: 2.0,
+                        opacity: 0.3 } );
+    timeLines.push(line);
+  }
 
   layers[3].clearLayers();
-  layers[3].addLayer(line);
+  layers[3].addLayer(L.layerGroup(timeLines));
 }
 
 function updateVR(rss) {
@@ -232,13 +253,14 @@ function updateVR(rss) {
       ls.push(mark);
     }
 
-    if (num == tracked) { trk = tracked; }
+    if (num == tracked) {
+      trk = tracked;
+      infoUpdate(lat, lng, tracked);
+    }
   }
 
   if (trk == 0) 
     infoTrainHide();
-  else
-    infoUpdate(lat, lng, tracked);
 
   layers[5].clearLayers();
   layers[5].addLayer(L.layerGroup(ls));
@@ -410,7 +432,7 @@ function infoUpdate(lat, lng, num) {
   var train = getTrainByNumber(num);
   var station, uic;
 
-  if ( train == 'undefined') return;
+  if (typeof(train) == 'undefined') return;
 
   if (train.trainCategory == 'Commuter') {
     name = train.commuterLineID;
