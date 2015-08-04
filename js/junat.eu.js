@@ -499,7 +499,8 @@ function infoTrain(color, lat, lng, num) {
 
   for (i = 1; i < t.length - 1; i += 2) {
     s = getStationByCode(t[i].stationShortCode);
-    if (PStations.indexOf(t[i].stationShortCode) == -1) continue;
+    // if (PStations.indexOf(t[i].stationShortCode) == -1) continue;
+    if (!t[i].trainStopping) continue;
 
     r = l.insertRow();
     r.insertCell();
@@ -522,10 +523,12 @@ function infoTrain(color, lat, lng, num) {
   if ($('#info-path-timetable').height() > 80) {
     $('#info-train-nano').addClass('nano');
     $('#info-train-nano-content').addClass('nano-content');
-//    $('#info-train-nano').nanoScroller({ alwaysVisible: true,
-//                                         scroll: 'top' });
     $('.nano').nanoScroller({ alwaysVisible: true, scroll: 'top' });
+    /* This looks redundant, but it's not. Quite often timetable
+     * changes in size this takes care of this after "stop" below. */
+    $('.nano').nanoScroller();
   } else {
+    // destroy does not work at all
     $('.nano').nanoScroller({ stop: true });
     $('#info-train-nano').removeClass('nano');
     $('#info-train-nano-content').removeClass('nano-content');
