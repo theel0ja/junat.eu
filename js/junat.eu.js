@@ -486,6 +486,8 @@ function infoStation(uic) {
 
   if ( typeof(station) == 'undefined' ) return;
 
+  setInfoWidth();
+
   $('#info-station-name').text(station.stationName);
   $('#info-station-lat').text(station.latitude.toFixed(2) + '°N');
   $('#info-station-lng').text(station.longitude.toFixed(2) + '°E');
@@ -542,6 +544,7 @@ function infoTrain(color, lat, lng, num) {
     $('.nano').nanoScroller({ alwaysVisible: true, scroll: 'top' });
     /* This looks redundant, but it's not. Quite often timetable
      * changes in size and this takes care of this after "stop" below. */
+    setInfoWidth();
     $('.nano').nanoScroller();
   } else {
     $('.nano').nanoScroller({ stop: true });
@@ -604,11 +607,13 @@ $().ready(function() {
   timers.push(setInterval(function() { getVR(); }, 1000 * 20));
 });
 
-$(window).load(function() {
+function setInfoWidth() {
   n = getTextWidth("teollisuusraiteet", "normal bold normal 30px 'Open Sans'");
   n = Math.ceil((n + 1) / 10) * 10;
   $('.info-display').css('width', n + 'px');
   $('.nano').css('width', n + 'px');
-});
+}
+
+$(window).load(function() { setInfoWidth(); });
 
 // end of file.
