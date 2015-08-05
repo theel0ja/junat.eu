@@ -556,6 +556,7 @@ $().ready(function() {
   var tiles;
   var tileset = localStorage.getItem('junat.eu-tileset');
 
+
   for(var i = 0; i < layers.length; i++) layers[i] = L.layerGroup();
   for (k in CStations) { LStations = LStations.union(CStations[k]); }
 
@@ -602,5 +603,12 @@ $().ready(function() {
   timers.push(setInterval(function() { getTrains(); }, 1000 * 120));
   timers.push(setInterval(function() { getVR(); }, 1000 * 20));
 });
+
+$(window).load(function() {
+  n = getTextWidth("teollisuusraiteet", "normal bold normal 30px 'Open Sans'");
+  n = Math.ceil((n + 1) / 10) * 10;
+  $('.info-display').css('width', n + 'px');
+  $('.nano').css('width', n + 'px');
+}
 
 // end of file.
