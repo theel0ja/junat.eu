@@ -1,0 +1,42 @@
+/* TopazPlus font face from http://trueschool.se/ */
+@font-face {
+           font-family:"TopazPlus a600a1200a4000";
+           src: url(TopazPlus_a1200_v1.0.ttf);
+}
+
+@keyframes blink {
+        50% { border-color: #000000; }
+}
+
+body {
+        background-color:  black;
+        font-family: "TopazPlus a600a1200a4000";
+}
+
+.error {
+        animation-name: blink;
+        animation-direction: alternate;
+        animation-duration: .5s;
+        animation-iteration-count: infinite;
+        animation-timing-function: step-end;
+        background-color: black;
+        margin: 20px auto;
+        padding: 10px;
+        text-align: center;
+        width: 640px;
+}
+
+.red {
+        border: 7px solid #F72000;
+        color: #F72000;
+}
+
+.yellow {
+        border: 7px solid #FFFF00;
+        color: #FFFF00;
+}
+
+.green {
+        border: 7px solid #00FF00;
+        color: #00FF00;
+}
