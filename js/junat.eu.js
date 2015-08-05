@@ -609,6 +609,6 @@ $(window).load(function() {
   n = Math.ceil((n + 1) / 10) * 10;
   $('.info-display').css('width', n + 'px');
   $('.nano').css('width', n + 'px');
-}
+});
 
 // end of file.
