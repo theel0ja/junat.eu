@@ -193,14 +193,16 @@ function infoPath(id) {
     if (typeof(train.timeTableRows[i].actualTime) != 'undefined') {
       actual = new Date(train.timeTableRows[i].actualTime);
       scheduled = new Date(train.timeTableRows[i].scheduledTime);
-      if (actual > scheduled)
+      if (actual > scheduled &&
+          train.timeTableRows[i].differenceInMinutes > 1)
         c = '#FF9900';
     } 
 
     if (typeof(train.timeTableRows[i + 1].actualTime) != 'undefined') {
       actual = new Date(train.timeTableRows[i + 1].actualTime);
       scheduled = new Date(train.timeTableRows[i + 1].scheduledTime);
-      if (actual > scheduled)
+      if (actual > scheduled &&
+          train.timeTableRows[i + 1].differenceInMinutes > 1)
         c = '#FF0000';
     }
 
@@ -210,6 +212,7 @@ function infoPath(id) {
     line = L.polyline(path,
                       { clickable: false,
                         color: c,
+                        lineCap: 'butt',
                         smoothFactor: 2.0,
                         opacity: 0.3 } );
     timeLines.push(line);
