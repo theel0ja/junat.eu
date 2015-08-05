@@ -16,7 +16,6 @@ body { font-family: 'Open Sans'; }
     left: 5px !important;
     position: absolute !important;
     top: 5px !important;
-    width: 200px;
     filter: alpha(opacity=80);
     -moz-opacity: 0.8;
     -khtml-opacity: 0.8;
@@ -38,7 +37,6 @@ body { font-family: 'Open Sans'; }
     display: table;
 }
 .info-row {
-/*        border: 1px solid black;*/
     display: block;
 }
 #info-station-code, #info-station-lat, #info-station-long, #info-train-number, #info-train-lat, #info-train-long {
