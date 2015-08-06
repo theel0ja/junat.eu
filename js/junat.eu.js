@@ -570,7 +570,11 @@ $().ready(function() {
         var osmbw = new L.TileLayer(
           'http://a.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
           { attribution:
-              '<a href="https://github.com/samilaine/junat.eu">Sorsat</a>' +
+              '<a href="https://github.com/samilaine/junat.eu">'
+              'Sorsat Samilta</a>' +
+              ' | ' +
+              '<a href="http://rata.digitraffic.fi/api/v1/doc/index.html">' +
+              'Aikataulutiedot Trafilta</a>' +
               ' | ' +
               'Map data © <a href="http://openstreetmap.org">' +
               'OpenStreetMap</a> contributors' } );   
