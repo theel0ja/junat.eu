@@ -556,9 +556,8 @@ function infoTrain(color, lat, lng, num) {
 }
 
 $().ready(function() {
-  var tiles;
+  var tiles = [];
   var tileset = localStorage.getItem('junat.eu-tileset');
-
 
   for(var i = 0; i < layers.length; i++) layers[i] = L.layerGroup();
   for (k in CStations) { LStations = LStations.union(CStations[k]); }
@@ -567,31 +566,54 @@ $().ready(function() {
     switch (tileset) {
       case 'osmbw':
       default:
-        var osmbw = new L.TileLayer(
+        tiles[0] = new L.TileLayer(
           'http://a.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
           { attribution:
               '<a href="https://github.com/samilaine/junat.eu">' +
               'Sorsat Samilta</a>' +
               ' | ' +
               '<a href="http://rata.digitraffic.fi/api/v1/doc/index.html">' +
-              'Aikataulutiedot Trafilta</a>' +
+              'Aikataulu- ja asematiedot LV</a>' +
               ' | ' +
               'Map data © <a href="http://openstreetmap.org">' +
               'OpenStreetMap</a> contributors' } );   
-        tiles = osmbw;
+        tiles[1] = osmmapnik = new L.TileLayer(
+          'http://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          { attribution:
+              '<a href="https://github.com/samilaine/junat.eu">' +
+              'Sorsat Samilta</a>' +
+              ' | ' +
+              '<a href="http://rata.digitraffic.fi/api/v1/doc/index.html">' +
+              'Aikataulu- ja asematiedot LV</a>' +
+              ' | ' +
+              'Map data © <a href="http://openstreetmap.org">' +
+              'OpenStreetMap</a> contributors' } );   
+        tiles[2] = new L.TileLayer(
+          'http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+          { attribution:
+              '<a href="https://github.com/samilaine/junat.eu">' +
+              'Sorsat Samilta</a>' +
+              ' | ' +
+              '<a href="http://rata.digitraffic.fi/api/v1/doc/index.html">' +
+              'Aikataulu- ja asematiedot LV</a>' +
+              ' | ' +
+              'Map data © <a href="http://openstreetmap.org">' +
+              'OpenStreetMap</a> contributors' } );   
     }
   }
 
   map = L.map('train-map', { center: [ 60.860, 24.9327 ],
                              zoomControl: false,
-                             layers: [ tiles,
+                             layers: [ tiles[1],
                                        layers[1], layers[3],
                                        layers[4], layers[5],
                                        layers[6] ],
                              zoom: 7 });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  L.control.layers({ },
+  L.control.layers({ 'OpenStreetmap B/W': tiles[0],
+                     'OpenStreetmap Mapnik/Basic': tiles[1],
+                     'OpenStreetmap Mapnik/MapQuest': tiles[2] },
                    { 'Henkilöliikenteen asemat': layers[1],
                      'Kaikki liikennepaikat': layers[0],
                      'Lähiliikenteen asemat': layers[2],
