@@ -133,7 +133,7 @@ function getStationByName(id) {
 function getMetas() {
   var d = new Date();
 
-  $.getJSON(trafi + '/metadata/station',
+  $.getJSON(trafi + '/metadata/stations',
             function(json) {
               stations = json;
               plotAllStations(stations);
