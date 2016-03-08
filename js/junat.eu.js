@@ -147,10 +147,10 @@ function getMetas() {
                      d.getUTCDay(),
                      function(json) { compositions = json; }) }).
     then(function() {
-           $.getJSON(trafi + '/metadata/operator',
+           $.getJSON(trafi + '/metadata/operators',
                      function(json) { operators = json; }) }).
     then(function() {
-           $.getJSON(trafi + '/metadata/train_type',
+           $.getJSON(trafi + '/metadata/train_types',
                      function(json) { types = json; }) });
 }
 
