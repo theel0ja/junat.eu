@@ -150,7 +150,7 @@ function getMetas() {
            $.getJSON(trafi + '/metadata/operator',
                      function(json) { operators = json; }) }).
     then(function() {
-           $.getJSON(trafi + '/metadata/train_type',
+           $.getJSON(trafi + '/metadata/train-types',
                      function(json) { types = json; }) });
 }
 
