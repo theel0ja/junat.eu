@@ -23,7 +23,6 @@ var layers = Array(7);
 // Clean this global shit up.
 var tracked;
 var map;
-var compositions;
 var operators;
 var stations;
 var trains;
@@ -91,6 +90,7 @@ function getTrainByNumber(id) {
                   function(e, i) { return e.trainNumber == id; });
   if (r.length > 0)
     return r.first();
+
   return undefined;
 }
 
@@ -135,21 +135,18 @@ function getMetas() {
 
   $.getJSON(trafi + '/metadata/stations',
             function(json) {
+              console.info("Fetching station data.");
               stations = json;
               plotAllStations(stations);
               plotPStations(PStations, stationIcons['person']);
               plotCStations(CStations, stationIcons['commuter']);
             }).
-    then(function() {
-           $.getJSON(trafi + '/compositions?date=' +
-                     d.getUTCFullYear() + "-" +
-                     d.getUTCMonth() + "-" +
-                     d.getUTCDay(),
-                     function(json) { compositions = json; }) }).
-    then(function() {
+    done(function() {
+           console.info("Fetching operator data.");
            $.getJSON(trafi + '/metadata/operators',
                      function(json) { operators = json; }) }).
-    then(function() {
+    done(function() {
+           console.info("Fetching train data.");
            $.getJSON(trafi + '/metadata/train-types',
                      function(json) { types = json; }) });
 }
@@ -164,13 +161,20 @@ function getVR() {
    * and hece go past cross-domain query restrictions.
    * Usable only for some tiny, smiall crap like VR live RSS.
    */
-  $.getJSON("http://query.yahooapis.com/v1/public/yql?"+
-            "q=select%20*%20from%20html%20where%20url%3D%22"+
-             encodeURIComponent(vr_georss)+
-             "%22&format=xml'&callback=?",
-             function(data) {
-               if ( data.results[0] )
-                 updateVR(data.results[0]); });
+  /*
+  u = "http://query.yahooapis.com/v1/public/yql?" +
+      "q=select%20*%20from%20html%20where%20url%3D%22" +
+      encodeURIComponent(vr_georss) +
+      "%22&format=xml&callback=?";
+      */
+  u = "https://query.yahooapis.com/v1/public/yql?" +
+      "q=select%20*%20from%20rss%20where%20url%3D" +
+      "'http%3A%2F%2F188.117.35.14%2FTrainRSS%2FTrainService.svc%2FAllTrains'" +
+      "&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
+  $.getJSON(u, function(data) {
+                 console.info("Fetching train location data.");
+                 if ( data.query.results.item.length > 0 )
+                   updateVR(data.query.results.item); });
 }
 
 function infoPath(id) {
@@ -223,22 +227,22 @@ function infoPath(id) {
 }
 
 function updateVR(rss) {
-  var coll = $.parseXML(rss.replace(/title/g, 'nom')).
-               getElementsByTagName('item');
   var cs = [];
   var ls = [];
   var trk = 0;
 
-  for(var i = coll.length - 1; i > 0; i--) {
-    var dir = coll[i].getElementsByTagName('dir')[0].innerHTML;
-    var lat = Number(coll[i].getElementsByTagName('point')[0].
-                             innerHTML.split(' ')[0]);
-    var lng = Number(coll[i].getElementsByTagName('point')[0].
-                             innerHTML.split(' ')[1]);
-    var num = Number(coll[i].getElementsByTagName('guid')[0].
-                             innerHTML.replace(/[^\d]/g, ''));
+  for(var i = rss.length - 1; i > 0; i--) {
+    var lat = Number(rss[i].point.split(' ')[0]);
+    var lng = Number(rss[i].point.split(' ')[1]);
+    var num = Number(rss[i].guid.content.replace(/[^\d]/g, ''));
+
+    if (num < 1) continue;
 
     var train = getTrainByNumber(num);
+
+    if (typeof(train) == 'undefined')
+      continue;
+
     var label;
 
     if (train.trainCategory == 'Commuter') {
@@ -265,7 +269,7 @@ function updateVR(rss) {
                  bindLabel(label, { clickable: false,
                                     noHide: true,
                                     offset: [ 12, -22 ] });
-    mark.setIconAngle(dir);
+    mark.setIconAngle(rss[i].dir);
 
     if (train.trainCategory == 'Commuter') {
       mark.on('click', infoTrain.bind(this, 'hsl', lat, lng, num))
