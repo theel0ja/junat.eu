@@ -236,11 +236,11 @@ function updateVR(rss) {
     var lng = Number(rss[i].point.split(' ')[1]);
     var num = Number(rss[i].guid.content.replace(/[^\d]/g, ''));
 
-    if (num < 1) continue; 
+    if (num < 1) continue;
 
     var train = getTrainByNumber(num);
 
-    if (typeof(train) == 'undefined') 
+    if (typeof(train) == 'undefined')
       continue;
 
     var label;
